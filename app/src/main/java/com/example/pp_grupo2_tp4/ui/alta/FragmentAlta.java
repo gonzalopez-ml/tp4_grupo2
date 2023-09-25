@@ -8,14 +8,19 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
+import com.example.pp_grupo2_tp4.OnCategoriesDownloadedListener;
 import com.example.pp_grupo2_tp4.R;
-import com.example.pp_grupo2_tp4.base.DatabaseConexion;
+import com.example.pp_grupo2_tp4.dao.ArticuloDao;
 import com.example.pp_grupo2_tp4.dao.CategoriaDao;
+import com.example.pp_grupo2_tp4.modelos.Articulo;
 import com.example.pp_grupo2_tp4.modelos.Categoria;
 
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,71 +28,109 @@ import java.util.List;
  * Use the {@link FragmentAlta#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class FragmentAlta extends Fragment {
+public class FragmentAlta extends Fragment implements OnCategoriesDownloadedListener {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+
     private Spinner spinnerCategorias;
     private CategoriaDao categoriaDAO;
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private ArticuloDao articuloDao;
+    private EditText editTextId;
+    private EditText editTextNombre;
+    private EditText editTextStock;
+    private List<Categoria> categoriasDescargadas;
 
     public FragmentAlta() {
-        // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment FragmentAlta.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static FragmentAlta newInstance(String param1, String param2) {
-        FragmentAlta fragment = new FragmentAlta();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+    public static FragmentAlta newInstance() {
+        return new FragmentAlta();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        View rootView = inflater.inflate(R.layout.fragment_alta, container, false);
 
-        try {
-            categoriaDAO = new CategoriaDao(DatabaseConexion.getConnection());
-        } catch (SQLException e) {
-            e.printStackTrace();
+        spinnerCategorias = rootView.findViewById(R.id.spinner);
+
+        categoriaDAO = new CategoriaDao(this);
+        categoriaDAO.execute();
+
+        Button btnAceptar = rootView.findViewById(R.id.btnAceptar);
+        editTextId = rootView.findViewById(R.id.editTextId);
+        editTextNombre = rootView.findViewById(R.id.editTextNombreProducto);
+        editTextStock = rootView.findViewById(R.id.editTextStock);
+
+        btnAceptar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                guardarArticulo();
+            }
+        });
+
+        return rootView;
+    }
+
+    private void guardarArticulo() {
+        String descripcionCategoria = spinnerCategorias.getSelectedItem().toString();
+        Categoria categoriaSeleccionada = obtenerCategoriaPorDescripcion(descripcionCategoria);
+
+        if (editTextId.getText().toString().isEmpty() || editTextNombre.getText().toString().isEmpty() ||
+                editTextStock.getText().toString().isEmpty()) {
+            Toast.makeText(requireContext(), "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        List<Categoria> categorias = categoriaDAO.getAllCategorias();
+        Articulo articulo = new Articulo();
+        articulo.setId(Integer.parseInt(editTextId.getText().toString()));
+        articulo.setNombre(editTextNombre.getText().toString());
+        articulo.setStock(Integer.parseInt(editTextStock.getText().toString()));
+        articulo.setCategoria(categoriaSeleccionada);
 
-        ArrayAdapter<Categoria> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, categorias);
+        ArticuloDao articuloDao = new ArticuloDao(articulo, new ArticuloDao.OnArticuloGuardadoListener() {
+            @Override
+            public void onArticuloGuardado(boolean exito) {
+                if (exito) {
+                    requireActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(requireContext(), "Artículo guardado exitosamente", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    requireActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(requireContext(), "Error al guardar el artículo", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+        });
+
+        articuloDao.execute();
+    }
+
+    private Categoria obtenerCategoriaPorDescripcion(String descripcion) {
+        for (Categoria categoria : categoriasDescargadas) {
+            if (categoria.getDescripcion().equals(descripcion)) {
+                return categoria;
+            }
+        }
+        return null;
+    }
+
+
+    @Override
+    public void onCategoriesDownloaded(List<Categoria> categorias) {
+        categoriasDescargadas = categorias;
+
+        List<String> descripcionesCategorias = new ArrayList<>();
+        for (Categoria categoria : categorias) {
+            descripcionesCategorias.add(categoria.getDescripcion());
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, descripcionesCategorias);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        spinnerCategorias.findViewById(R.id.spinner);
-
         spinnerCategorias.setAdapter(adapter);
-
-
-        return inflater.inflate(R.layout.fragment_alta, container, false);
     }
 }
