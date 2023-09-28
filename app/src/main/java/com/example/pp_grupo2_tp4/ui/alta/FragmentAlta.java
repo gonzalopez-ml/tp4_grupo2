@@ -51,7 +51,7 @@ public class FragmentAlta extends Fragment implements OnCategoriesDownloadedList
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_alta, container, false);
 
-        spinnerCategorias = rootView.findViewById(R.id.spinner);
+        spinnerCategorias = rootView.findViewById(R.id.spinnerEdit);
 
         categoriaDAO = new CategoriaDao(this);
         categoriaDAO.execute();
@@ -74,10 +74,11 @@ public class FragmentAlta extends Fragment implements OnCategoriesDownloadedList
     private void guardarArticulo() {
         String descripcionCategoria = spinnerCategorias.getSelectedItem().toString();
         Categoria categoriaSeleccionada = obtenerCategoriaPorDescripcion(descripcionCategoria);
+        Integer stock = Integer.parseInt(editTextStock.getText().toString());
 
         if (editTextId.getText().toString().isEmpty() || editTextNombre.getText().toString().isEmpty() ||
-                editTextStock.getText().toString().isEmpty()) {
-            Toast.makeText(requireContext(), "Por favor, completa todos los campos", Toast.LENGTH_SHORT).show();
+                editTextStock.getText().toString().isEmpty() || stock < 0) {
+            Toast.makeText(requireContext(), "Por favor, completa correctamente todos los campos", Toast.LENGTH_SHORT).show();
             return;
         }
 
