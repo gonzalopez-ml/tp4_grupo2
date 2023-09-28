@@ -1,5 +1,6 @@
 package com.example.pp_grupo2_tp4;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,9 +13,9 @@ import java.util.List;
 
 import com.example.pp_grupo2_tp4.modelos.Articulo;
 
-public class ArticuloAdapter extends RecyclerView.Adapter<ArticuloAdapter.ViewHolder> {
-    private final Context context;
-    private final List<Articulo> listaArticulos;
+public class ArticuloAdapter extends RecyclerView.Adapter<ArticuloAdapter.ArticuloViewHolder> {
+    private Context context;
+    private List<Articulo> listaArticulos;
 
     public ArticuloAdapter(Context context, List<Articulo> listaArticulos) {
         this.context = context;
@@ -23,15 +24,18 @@ public class ArticuloAdapter extends RecyclerView.Adapter<ArticuloAdapter.ViewHo
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.fragment_listado, parent, false);
-        return new ViewHolder(view);
+    public ArticuloViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_articulo, parent, false);
+        return new ArticuloViewHolder(itemView);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ArticuloViewHolder holder, int position) {
         Articulo articulo = listaArticulos.get(position);
-        holder.bind(articulo);
+        holder.txtNombre.setText("Nombre articulo :" + articulo.getNombre());
+        holder.txtStock.setText("Stock :" + String.valueOf(articulo.getStock()));
+        holder.txtCat.setText("Categoria :" + String.valueOf(articulo.getCategoria().getDescripcion()));
     }
 
     @Override
@@ -39,27 +43,16 @@ public class ArticuloAdapter extends RecyclerView.Adapter<ArticuloAdapter.ViewHo
         return listaArticulos.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        private final TextView idTextView;
-        private final TextView nombreTextView;
-        private final TextView stockTextView;
-        private final TextView categoriaTextView;
+    public class ArticuloViewHolder extends RecyclerView.ViewHolder {
+        TextView txtNombre;
+        TextView txtStock;
+        TextView txtCat;
 
-        public ViewHolder(View itemView) {
+        public ArticuloViewHolder(View itemView) {
             super(itemView);
-            idTextView = itemView.findViewById(R.id.txtViewId);
-            nombreTextView = itemView.findViewById(R.id.txtViewNombreProducto);
-            stockTextView = itemView.findViewById(R.id.txtViewStock);
-            categoriaTextView = itemView.findViewById(R.id.txtViewCategoria);
-
-
-        }
-
-        public void bind(Articulo articulo) {
-            idTextView.setText(articulo.getId());
-            nombreTextView.setText(articulo.getNombre());
-            stockTextView.setText(articulo.getStock());
-            categoriaTextView.setText(articulo.getCategoria().getId());
+            txtNombre = itemView.findViewById(R.id.txtItemNombre);
+            txtStock = itemView.findViewById(R.id.txtItemStock);
+            txtCat = itemView.findViewById(R.id.txtItemCategoria);
         }
     }
 }

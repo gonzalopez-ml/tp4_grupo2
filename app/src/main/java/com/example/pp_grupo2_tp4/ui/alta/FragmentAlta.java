@@ -101,7 +101,7 @@ public class FragmentAlta extends Fragment implements OnCategoriesDownloadedList
                     requireActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(requireContext(), "Error al guardar el artículo", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), "Error al guardar el artículo, articulo existente", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
